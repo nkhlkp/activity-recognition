@@ -4,7 +4,7 @@ import csv
 import keyboard
 import os
 
-HOST = "10.145.27.140"
+HOST = "0.0.0.0"
 PORT = 5000
 
 OUTPUT_DIR = "data"

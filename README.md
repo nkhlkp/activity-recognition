@@ -1,6 +1,6 @@
-# Mario IMU Controller
+# Activity Recognition System for Game Control
 
-Control a browser-based Super Mario game using your phone's accelerometer. Walk, jump, and idle in real life — Mario does the same on screen.
+Control a browser-based Super Mario game using your phone's accelerometer. Walk, jump, and idle in real life and Mario does the same on screen.
 
 ## How It Works
 
@@ -16,20 +16,21 @@ Phone (Android App)  --->  TCP Socket  --->  Python Server (PC)
 
 ## Project Structure
 
-| File | Description |
-|------|-------------|
-| `android_app/` | Android app (Kotlin) — streams accelerometer data over TCP |
-| `collect_data.py` | Real-time data collection with keyboard labeling |
-| `build_dataset.py` | Preprocesses CSVs into windowed datasets with feature extraction |
-| `train_baseline.py` | Trains a Random Forest classifier |
-| `train_lstm.py` | Trains an LSTM classifier |
-| `live_rf_inference.py` | Live inference with Random Forest + game controls |
-| `live_lstm_inference.py` | Live inference with LSTM + game controls |
-| `imu_server.py` | Simple server for visualizing raw accelerometer data |
+| File                     | Description                                                      |
+| ------------------------ | ---------------------------------------------------------------- |
+| `android_app/`           | Android app (Kotlin) — streams accelerometer data over TCP       |
+| `collect_data.py`        | Real-time data collection with keyboard labeling                 |
+| `build_dataset.py`       | Preprocesses CSVs into windowed datasets with feature extraction |
+| `train_baseline.py`      | Trains a Random Forest classifier                                |
+| `train_lstm.py`          | Trains an LSTM classifier                                        |
+| `live_rf_inference.py`   | Live inference with Random Forest + game controls                |
+| `live_lstm_inference.py` | Live inference with LSTM + game controls                         |
+| `imu_server.py`          | Simple server for visualizing raw accelerometer data             |
 
 ## Setup
 
 ### Prerequisites
+
 - Python 3.11+
 - Android phone with the app installed
 - PC and phone on the same WiFi network
@@ -63,11 +64,13 @@ python build_dataset.py
 ### 3. Train Model
 
 **Random Forest:**
+
 ```bash
 python train_baseline.py
 ```
 
 **LSTM:**
+
 ```bash
 python train_lstm.py
 ```
@@ -86,15 +89,16 @@ python live_lstm_inference.py
 
 ### Controls
 
-| Motion | Game Action |
-|--------|-------------|
-| IDLE | Release all keys |
-| WALK | Hold RIGHT arrow |
-| JUMP | Press SPACE |
+| Motion | Game Action      |
+| ------ | ---------------- |
+| IDLE   | Release all keys |
+| WALK   | Hold RIGHT arrow |
+| JUMP   | Press SPACE      |
 
 ## Android App
 
 The app is in `android_app/`. Open it in Android Studio, build, and install on your phone. It provides:
+
 - IP/Port input to connect to the PC server
 - Start/Stop streaming toggle
 - Streams accelerometer data as CSV over TCP: `timestamp,ax,ay,az`
@@ -104,7 +108,7 @@ The app is in `android_app/`. Open it in Android Studio, build, and install on y
 Update `HOST` in the Python scripts to match your PC's local IP address:
 
 ```python
-HOST = "10.145.27.140"  # Change to your PC's IP
+HOST = "0.0.0.0"  # Listens on all interfaces
 ```
 
 Find your IP with `ipconfig` (Windows) or `ifconfig` (Mac/Linux).

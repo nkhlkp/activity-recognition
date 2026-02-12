@@ -4,7 +4,7 @@ import csv
 from collections import deque
 import matplotlib.pyplot as plt
 
-HOST = "10.145.27.140"   # Listen on all interfaces
+HOST = "0.0.0.0"   # Listen on all interfaces
 PORT = 5000        # Must match phone app
 
 SAVE_TO_CSV = True

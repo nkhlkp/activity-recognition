@@ -14,7 +14,7 @@ pyautogui.FAILSAFE = False
 # CONFIG
 # ===============================
 
-HOST = "10.145.27.140"
+HOST = "0.0.0.0"
 PORT = 5000
    
 WINDOW_SIZE = 48
