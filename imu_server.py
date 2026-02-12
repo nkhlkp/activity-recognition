@@ -106,14 +106,14 @@ def main():
                     continue  # Skip malformed lines
 
                 timestamp_ms = float(parts[0])
-                ax, ay, az = map(float, parts[1:4])
+                acx, acy, acz = map(float, parts[1:4])
 
                 packet_count += 1
 
                 # Add data to buffers
-                data_acc[0].append(ax)
-                data_acc[1].append(ay)
-                data_acc[2].append(az)
+                data_acc[0].append(acx)
+                data_acc[1].append(acy)
+                data_acc[2].append(acz)
 
                 # Update plot periodically
                 if packet_count % PLOT_UPDATE_RATE == 0:
@@ -126,7 +126,7 @@ def main():
                     print(f"[INFO] Packets: {packet_count} | Rate: {rate:.2f} Hz")
 
                 if SAVE_TO_CSV:
-                    writer.writerow([timestamp_ms, ax, ay, az])
+                    writer.writerow([timestamp_ms, acx, acy, acz])
 
     except KeyboardInterrupt:
         print("\n[INFO] Server stopped manually.")
