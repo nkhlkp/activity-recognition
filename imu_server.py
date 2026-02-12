@@ -82,6 +82,7 @@ def update_plot(ax1, ax2, lines_acc, lines_gyro, data_acc, data_gyro):
 
 def main():
     conn = start_server()
+    conn.settimeout(0.05)  # Short timeout so matplotlib stays responsive
 
     buffer = ""
     packet_count = 0
@@ -101,7 +102,11 @@ def main():
 
     try:
         while True:
-            data = conn.recv(4096).decode("utf-8")
+            try:
+                data = conn.recv(4096).decode("utf-8")
+            except socket.timeout:
+                plt.pause(0.01)  # Keep the plot responsive while waiting
+                continue
 
             if not data:
                 print("[WARNING] Connection closed by client.")
@@ -119,14 +124,19 @@ def main():
 
                 parts = line.split(",")
 
-                if len(parts) != 7:
+                # Support both 4-field (accel only) and 7-field (accel+gyro)
+                if len(parts) == 4:
+                    timestamp_ms = float(parts[0])
+                    ax, ay, az = map(float, parts[1:4])
+                    gx, gy, gz = 0.0, 0.0, 0.0
+                elif len(parts) == 7:
+                    timestamp_ms = float(parts[0])
+                    ax, ay, az = map(float, parts[1:4])
+                    gx, gy, gz = map(float, parts[4:7])
+                else:
                     continue  # Skip malformed lines
 
                 packet_count += 1
-
-                timestamp_ms = float(parts[0])
-                ax, ay, az = map(float, parts[1:4])
-                gx, gy, gz = map(float, parts[4:7])
 
                 # Add data to buffers
                 data_acc[0].append(ax)
