@@ -31,7 +31,6 @@ conn.settimeout(0.05)
 # ===============================
 
 timestamp = int(time.time())
-jiwijw
 files = {}
 writers = {}
 counts = {}
