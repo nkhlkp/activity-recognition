@@ -9,10 +9,37 @@ from sklearn.metrics import classification_report, confusion_matrix
 # 1. Load Dataset
 # =========================
 
-X = np.load("X.npy")   # Shape: (N, 48, 3)
-y = np.load("y.npy")   # Shape: (N,)
+X_raw = np.load("X_raw.npy")   # Shape: (N, 48, 3) — raw accel windows
+y = np.load("y.npy")            # Shape: (N,)
 
-print("Dataset shape:", X.shape)
+print("Raw dataset shape:", X_raw.shape)
+
+# =========================
+# 2. Compute Orientation-Invariant Features
+# =========================
+
+def transform_windows(X_raw):
+    """Convert raw (N, 48, 3) accel to orientation-invariant (N, 48, 4) time series."""
+    ax, ay, az = X_raw[:, :, 0], X_raw[:, :, 1], X_raw[:, :, 2]
+
+    # Acceleration magnitude (removes gravity direction)
+    mag = np.sqrt(ax**2 + ay**2 + az**2)
+
+    # Jerk magnitude (pad first timestep with 0)
+    jerk_ax = np.diff(ax, axis=1, prepend=ax[:, :1])
+    jerk_ay = np.diff(ay, axis=1, prepend=ay[:, :1])
+    jerk_az = np.diff(az, axis=1, prepend=az[:, :1])
+    jerk_mag = np.sqrt(jerk_ax**2 + jerk_ay**2 + jerk_az**2)
+
+    # Per-axis deviation from window mean (removes static gravity offset)
+    ax_centered = ax - ax.mean(axis=1, keepdims=True)
+    ay_centered = ay - ay.mean(axis=1, keepdims=True)
+
+    # Stack: (N, 48, 4) — mag, jerk_mag, ax_centered, ay_centered
+    return np.stack([mag, jerk_mag, ax_centered, ay_centered], axis=2)
+
+X = transform_windows(X_raw)
+print("Transformed dataset shape:", X.shape)
 
 # =========================
 # 2. Train/Test Split
@@ -61,7 +88,7 @@ class LSTMModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.lstm = nn.LSTM(
-            input_size=3,
+            input_size=4,
             hidden_size=64,
             num_layers=1,
             batch_first=True

@@ -7,6 +7,9 @@ from statistics import mode
 import pyautogui
 import time
 
+pyautogui.PAUSE = 0
+pyautogui.FAILSAFE = False
+
 
 # ===============================
 # CONFIG
@@ -31,7 +34,7 @@ class LSTMModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.lstm = nn.LSTM(
-            input_size=3,
+            input_size=4,
             hidden_size=64,
             num_layers=1,
             batch_first=True
@@ -129,13 +132,28 @@ while True:
         # Only predict if we have full window
         if len(data_buffer) == WINDOW_SIZE and sample_counter % STRIDE == 0:
 
-            window = np.array(data_buffer)
+            window = np.array(data_buffer)  # (48, 3)
+
+            # Compute orientation-invariant features
+            ax_w, ay_w, az_w = window[:, 0], window[:, 1], window[:, 2]
+
+            mag = np.sqrt(ax_w**2 + ay_w**2 + az_w**2)
+
+            jerk_ax = np.diff(ax_w, prepend=ax_w[0])
+            jerk_ay = np.diff(ay_w, prepend=ay_w[0])
+            jerk_az = np.diff(az_w, prepend=az_w[0])
+            jerk_mag = np.sqrt(jerk_ax**2 + jerk_ay**2 + jerk_az**2)
+
+            ax_centered = ax_w - ax_w.mean()
+            ay_centered = ay_w - ay_w.mean()
+
+            window_transformed = np.stack([mag, jerk_mag, ax_centered, ay_centered], axis=1)  # (48, 4)
 
             # Normalize
-            window = (window - mean) / std
+            window_transformed = (window_transformed - mean) / std
 
             window_tensor = torch.tensor(
-                window[np.newaxis, :, :],
+                window_transformed[np.newaxis, :, :],
                 dtype=torch.float32
             ).to(device)
 
