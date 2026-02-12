@@ -1,0 +1,48 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+.venv/
+venv/
+env/
+
+# IMU data output
+imu_data.csv
+
+# --- Android ---
+# Build outputs
+android_app/build/
+android_app/.gradle/
+android_app/.idea/
+android_app/local.properties
+
+# Gradle
+.gradle/
+gradle/wrapper/gradle-wrapper.jar
+
+# Signing
+*.jks
+*.keystore
+
+# APK/AAB
+*.apk
+*.aab
+
+# Google Services (contains API keys)
+google-services.json
+
+# --- IDE ---
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
