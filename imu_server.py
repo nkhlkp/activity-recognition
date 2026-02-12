@@ -3,7 +3,6 @@ import time
 import csv
 from collections import deque
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 
 HOST = "10.145.27.140"   # Listen on all interfaces
 PORT = 5000        # Must match phone app
@@ -28,54 +27,34 @@ def start_server():
 
 
 def setup_plot():
-    """Initialize the plot with two subplots for accelerometer and gyroscope."""
+    """Initialize the plot for accelerometer data."""
     plt.ion()  # Enable interactive mode
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
+    fig, ax = plt.subplots(figsize=(10, 5))
     
-    # Accelerometer plot
-    ax1.set_title("Accelerometer (m/s²)")
-    ax1.set_xlabel("Sample")
-    ax1.set_ylabel("Acceleration")
-    ax1.grid(True)
-    line_ax, = ax1.plot([], [], 'r-', label='ax', linewidth=1)
-    line_ay, = ax1.plot([], [], 'g-', label='ay', linewidth=1)
-    line_az, = ax1.plot([], [], 'b-', label='az', linewidth=1)
-    ax1.legend(loc='upper right')
-    
-    # Gyroscope plot
-    ax2.set_title("Gyroscope (rad/s)")
-    ax2.set_xlabel("Sample")
-    ax2.set_ylabel("Angular Velocity")
-    ax2.grid(True)
-    line_gx, = ax2.plot([], [], 'r-', label='gx', linewidth=1)
-    line_gy, = ax2.plot([], [], 'g-', label='gy', linewidth=1)
-    line_gz, = ax2.plot([], [], 'b-', label='gz', linewidth=1)
-    ax2.legend(loc='upper right')
+    ax.set_title("Accelerometer (m/s²)")
+    ax.set_xlabel("Sample")
+    ax.set_ylabel("Acceleration")
+    ax.grid(True)
+    line_ax, = ax.plot([], [], 'r-', label='ax', linewidth=1)
+    line_ay, = ax.plot([], [], 'g-', label='ay', linewidth=1)
+    line_az, = ax.plot([], [], 'b-', label='az', linewidth=1)
+    ax.legend(loc='upper right')
     
     plt.tight_layout()
     
-    return fig, ax1, ax2, (line_ax, line_ay, line_az), (line_gx, line_gy, line_gz)
+    return fig, ax, (line_ax, line_ay, line_az)
 
 
-def update_plot(ax1, ax2, lines_acc, lines_gyro, data_acc, data_gyro):
+def update_plot(ax, lines_acc, data_acc):
     """Update the plot with new data."""
     x = list(range(len(data_acc[0])))
     
-    # Update accelerometer lines
     lines_acc[0].set_data(x, data_acc[0])
     lines_acc[1].set_data(x, data_acc[1])
     lines_acc[2].set_data(x, data_acc[2])
     
-    # Update gyroscope lines
-    lines_gyro[0].set_data(x, data_gyro[0])
-    lines_gyro[1].set_data(x, data_gyro[1])
-    lines_gyro[2].set_data(x, data_gyro[2])
-    
-    # Rescale axes
-    ax1.relim()
-    ax1.autoscale_view()
-    ax2.relim()
-    ax2.autoscale_view()
+    ax.relim()
+    ax.autoscale_view()
     
     plt.pause(0.001)  # Short pause to update the plot
 
@@ -90,15 +69,14 @@ def main():
 
     # Initialize data buffers for plotting
     data_acc = [deque(maxlen=PLOT_WINDOW) for _ in range(3)]  # ax, ay, az
-    data_gyro = [deque(maxlen=PLOT_WINDOW) for _ in range(3)]  # gx, gy, gz
     
     # Setup plot
-    fig, ax1, ax2, lines_acc, lines_gyro = setup_plot()
+    fig, ax, lines_acc = setup_plot()
 
     if SAVE_TO_CSV:
         csv_file = open(CSV_FILENAME, mode="w", newline="")
         writer = csv.writer(csv_file)
-        writer.writerow(["timestamp_ms", "ax", "ay", "az", "gx", "gy", "gz"])
+        writer.writerow(["timestamp_ms", "ax", "ay", "az"])
 
     try:
         while True:
@@ -124,17 +102,11 @@ def main():
 
                 parts = line.split(",")
 
-                # Support both 4-field (accel only) and 7-field (accel+gyro)
-                if len(parts) == 4:
-                    timestamp_ms = float(parts[0])
-                    ax, ay, az = map(float, parts[1:4])
-                    gx, gy, gz = 0.0, 0.0, 0.0
-                elif len(parts) == 7:
-                    timestamp_ms = float(parts[0])
-                    ax, ay, az = map(float, parts[1:4])
-                    gx, gy, gz = map(float, parts[4:7])
-                else:
+                if len(parts) != 4:
                     continue  # Skip malformed lines
+
+                timestamp_ms = float(parts[0])
+                ax, ay, az = map(float, parts[1:4])
 
                 packet_count += 1
 
@@ -142,13 +114,10 @@ def main():
                 data_acc[0].append(ax)
                 data_acc[1].append(ay)
                 data_acc[2].append(az)
-                data_gyro[0].append(gx)
-                data_gyro[1].append(gy)
-                data_gyro[2].append(gz)
 
                 # Update plot periodically
                 if packet_count % PLOT_UPDATE_RATE == 0:
-                    update_plot(ax1, ax2, lines_acc, lines_gyro, data_acc, data_gyro)
+                    update_plot(ax, lines_acc, data_acc)
 
                 # Print occasionally to avoid flooding terminal
                 if packet_count % 50 == 0:
@@ -157,7 +126,7 @@ def main():
                     print(f"[INFO] Packets: {packet_count} | Rate: {rate:.2f} Hz")
 
                 if SAVE_TO_CSV:
-                    writer.writerow([timestamp_ms, ax, ay, az, gx, gy, gz])
+                    writer.writerow([timestamp_ms, ax, ay, az])
 
     except KeyboardInterrupt:
         print("\n[INFO] Server stopped manually.")
