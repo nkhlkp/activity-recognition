@@ -133,7 +133,7 @@ while True:
             window = np.array(data_buffer)
 
             # Extract orientation-invariant features
-            window_feat = extract_features(windo  w)
+            window_feat = extract_features(window)
 
             pred = clf.predict(window_feat)[0]
             proba = clf.predict_proba(window_feat)[0]
